@@ -40,11 +40,6 @@ type DemandOpts struct {
 	Target uint64
 	Name   string
 	JSON   string
-	RoutingService *routing.RoutingService
-	RideShare *rideshare.RideShare
-	ClockService *clock.ClockService
-	AreaService *area.AreaService
-	AgentService *agent.AgentService
 }
 
 // SupplyOpts is sender options for Supply
@@ -53,13 +48,6 @@ type SupplyOpts struct {
 	Target    uint64
 	Name      string
 	JSON      string
-	Fleet     *fleet.Fleet
-	PTService *ptransit.PTService
-	RoutingService *routing.RoutingService
-	RideShare *rideshare.RideShare
-	ClockService *clock.ClockService
-	AreaService *area.AreaService
-	AgentService *agent.AgentService
 }
 
 func init() {
@@ -168,17 +156,17 @@ func UnRegisterNode() {
 // SMServiceClient Wrappter Structure for market client
 type SMServiceClient struct {
 	ClientID IDType
-	MType    api.ChannelType
+	ChannelType    uint32
 	Client   api.SynerexClient
 	ArgJson  string
 	MbusID   IDType
 }
 
 // NewSMServiceClient Creates wrapper structre SMServiceClient from SynerexClient
-func NewSMServiceClient(clt api.SynerexClient, mtype api.ChannelType, argJson string) *SMServiceClient {
+func NewSMServiceClient(clt api.SynerexClient, mtype uint32, argJson string) *SMServiceClient {
 	s := &SMServiceClient{
 		ClientID: IDType(node.Generate()),
-		MType:    mtype,
+		ChannelType:    mtype,
 		Client:   clt,
 		ArgJson:  argJson,
 	}
@@ -191,7 +179,7 @@ func GenerateIntID() uint64 {
 }
 
 func (clt SMServiceClient) getChannel() *api.Channel {
-	return &api.Channel{ClientId: uint64(clt.ClientID), Type: clt.MType, ArgJson: clt.ArgJson}
+	return &api.Channel{ClientId: uint64(clt.ClientID), ChannelType: clt.ChannelType, ArgJson: clt.ArgJson}
 }
 
 // IsSupplyTarget is a helper function to check target
@@ -223,42 +211,14 @@ func (clt *SMServiceClient) ProposeSupply(spo *SupplyOpts) uint64 {
 		Id:         pid,
 		SenderId:   uint64(clt.ClientID),
 		TargetId:   spo.Target,
-		Type:       clt.MType,
+		ChannelType:       clt.ChannelType,
 		SupplyName: spo.Name,
 		ArgJson:    spo.JSON,
 	}
 
-	switch clt.MType {
-	case api.ChannelType_CLOCK_SERVICE:
-		if spo.ClockService != nil {
-			sp.WithClockService(spo.ClockService)
-		}
-	case api.ChannelType_AREA_SERVICE:
-		if spo.AreaService != nil {
-			sp.WithAreaService(spo.AreaService)
-		}
-	case api.ChannelType_AGENT_SERVICE:
-		if spo.AgentService != nil {
-			sp.WithAgentService(spo.AgentService)
-		}
-	case api.ChannelType_RIDE_SHARE:
-		if spo.RideShare != nil {
-			sp.WithRideShare(spo.RideShare)
-		}
-		if spo.Fleet != nil {
-			sp.WithFleet(spo.Fleet)
-		}
-	case api.ChannelType_PT_SERVICE:
-		spa := api.Supply_Arg_PTService{
-			spo.PTService,
-		}
-		sp.ArgOneof = &spa
-	case api.ChannelType_ROUTING_SERVICE:
-		spa := api.Supply_Arg_RoutingService{
-			spo.RoutingService,
-		}
-		sp.ArgOneof = &spa
-	}
+//	switch clt.ChannelType {//
+//Todo: We need to make if for each channel type
+	//	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -277,7 +237,7 @@ func (clt *SMServiceClient) SelectSupply(sp *api.Supply)  (uint64, error) {
 		Id:       GenerateIntID(),
 		SenderId: uint64(clt.ClientID),
 		TargetId: sp.Id,  /// Message Id of Supply (not SenderId),
-		Type:     sp.Type,
+		ChannelType:     sp.ChannelType,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -302,7 +262,7 @@ func (clt *SMServiceClient) SelectDemand(dm *api.Demand) error {
 		Id:       GenerateIntID(),
 		SenderId: uint64(clt.ClientID),
 		TargetId: dm.Id,
-		Type:     dm.Type,
+		ChannelType:     dm.ChannelType,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -432,47 +392,13 @@ func (clt *SMServiceClient) RegisterDemand(dmo *DemandOpts) uint64 {
 	dm := api.Demand{
 		Id:         id,
 		SenderId:   uint64(clt.ClientID),
-		Type:       clt.MType,
+		ChannelType:       clt.ChannelType,
 		DemandName: dmo.Name,
 		Ts:         ts,
 		ArgJson:    dmo.JSON,
 	}
-	switch clt.MType {
-/*	case api.ChannelType_CLOCK_SERVICE:
-		if dmo.ClockService != nil{
-			dm.WithClockService(dmo.ClockService)
-		}else{
-			log.Printf("ClockService info is nil")
-		}
-	case api.ChannelType_AREA_SERVICE:
-		if dmo.AreaService != nil{
-			dm.WithAreaService(dmo.AreaService)
-		}else{
-			log.Printf("AreaService info is nil")
-		}
-	case api.ChannelType_AGENT_SERVICE:
-		if dmo.AgentService != nil{
-			dm.WithAgentService(dmo.AgentService)
-		}else{
-			log.Printf("AgentService info is nil")
-		}*/
-	case api.ChannelType_ROUTING_SERVICE:
-		rsp := api.Demand_Arg_RoutingService{
-			dmo.RoutingService,
-		}
-		dm.ArgOneof = &rsp
-	case api.ChannelType_RIDE_SHARE:
-		if dmo.RideShare != nil{
-			dm.WithRideShare(dmo.RideShare)
-//			rsp := api.Demand_Arg_RideShare{
-//				dmo.RideShare,
-//			}
-//			dm.ArgOneof = &rsp
-		}else{
-			log.Printf("Rideshare info is nil")
-		}
-
-	}
+//	switch clt.ChannelType {
+//	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -501,47 +427,13 @@ func (clt *SMServiceClient) RegisterSupply(smo *SupplyOpts) uint64 {
 	dm := api.Supply{
 		Id:         id,
 		SenderId:   uint64(clt.ClientID),
-		Type:       clt.MType,
+		ChannelType:       clt.ChannelType,
 		SupplyName: smo.Name,
 		Ts:         ts,
 		ArgJson:    smo.JSON,
 	}
 
-	switch clt.MType {
-/*	case api.ChannelType_CLOCK_SERVICE:
-		if smo.ClockService != nil{
-			sp.WithClockService(smo.ClockService)
-		}else{
-			log.Printf("ClockService info is nil")
-		}
-	case api.ChannelType_AREA_SERVICE:
-		if smo.AreaService != nil{
-			sp.WithAreaService(smo.AreaService)
-		}else{
-			log.Printf("AreaService info is nil")
-		}
-	case api.ChannelType_AGENT_SERVICE:
-		if smo.AgentService != nil{
-			sp.WithAgentService(smo.AgentService)
-		}else{
-			log.Printf("AgentService info is nil")
-		} */
-	case api.ChannelType_RIDE_SHARE:
-		sp := api.Supply_Arg_Fleet{
-			smo.Fleet,
-		}
-		dm.ArgOneof = &sp
-	case api.ChannelType_PT_SERVICE:
-		sp := api.Supply_Arg_PTService{
-			smo.PTService,
-		}
-		dm.ArgOneof = &sp
-	case api.ChannelType_ROUTING_SERVICE:
-		sp := api.Supply_Arg_RoutingService{
-			smo.RoutingService,
-		}
-		dm.ArgOneof = &sp
-	}
+// TODO:
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -563,7 +455,7 @@ func (clt *SMServiceClient) Confirm(id IDType) error {
 		Id:       GenerateIntID(),
 		SenderId: uint64(clt.ClientID),
 		TargetId: uint64(id),
-		Type:     clt.MType,
+		ChannelType:     clt.ChannelType,
 		MbusId:   uint64(id),
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

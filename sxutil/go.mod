@@ -7,7 +7,6 @@ require (
 	github.com/golang/mock v1.2.0 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/nkawa/synerex_core_test/api v0.0.0
-	github.com/nkawa/synerex_core_test/nodeapi v0.0.0
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
@@ -25,5 +24,4 @@ require (
 replace (
 	github.com/nkawa/synerex_core_test/api => ../api
 	github.com/nkawa/synerex_core_test/nodeapi => ../nodeapi
-	github.com/nkawa/synerex_core_test/sxutil => ../sxutil
 )

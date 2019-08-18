@@ -45,20 +45,6 @@ message ConfirmResponse{
     string err = 4;
 }
 
-enum ChannelType {
-    NONE = 0;
-    RIDE_SHARE = 1;  // Rideshare Service Information
-    AD_SERVICE = 2;  // Advertisement Service Information
-    LIB_SERVICE = 3; // Public Library Service Information
-    PT_SERVICE = 4;  // Public Transit Information
-    ROUTING_SERVICE = 5; // Routing Service
-    MARKETING_SERVICE = 6; // Marketing (Ad/Enquate)
-    CLOCK_SERVICE = 7;  // Simulation Clock Service Information
-    AREA_SERVICE = 8;  // Simulation Area Service Information
-    AGENT_SERVICE = 9; // Simulation Agent Service Information
-    END = 10;
-}
-
 message Content {
     bytes entity = 1;
 }
