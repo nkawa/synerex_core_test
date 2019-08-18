@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package api;
+
+option go_package="api";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+service Synerex {
+    rpc RegisterDemand(Demand) returns (Response) {}
+
+    rpc RegisterSupply(Supply) returns (Response) {}
+
+    rpc ProposeDemand(Demand) returns (Response) {}
+
+    rpc ProposeSupply(Supply) returns (Response) {}
+
+    rpc SelectSupply(Target) returns (ConfirmResponse) {}
+
+    rpc SelectDemand(Target) returns (ConfirmResponse) {}
+
+    rpc Confirm(Target) returns (Response){}
+
+    rpc SubscribeDemand(Channel) returns (stream Demand) {}
+
+    rpc SubscribeSupply(Channel) returns (stream Supply) {}
+
+    rpc SubscribeMbus(Mbus) returns (stream MbusMsg) {}
+
+    rpc SendMsg(MbusMsg) returns (Response){}
+
+    rpc CloseMbus(Mbus) returns (Response){}
+}
+
+message Response {
+    bool ok = 1;
+    string err = 2;
+}
+
+message ConfirmResponse{
+    bool ok = 1;
+    fixed64 mbus_id = 2;
+    google.protobuf.Duration wait =3;
+    string err = 4;
+}
+
+enum ChannelType {
+    NONE = 0;
+    RIDE_SHARE = 1;  // Rideshare Service Information
+    AD_SERVICE = 2;  // Advertisement Service Information
+    LIB_SERVICE = 3; // Public Library Service Information
+    PT_SERVICE = 4;  // Public Transit Information
+    ROUTING_SERVICE = 5; // Routing Service
+    MARKETING_SERVICE = 6; // Marketing (Ad/Enquate)
+    CLOCK_SERVICE = 7;  // Simulation Clock Service Information
+    AREA_SERVICE = 8;  // Simulation Area Service Information
+    AGENT_SERVICE = 9; // Simulation Agent Service Information
+    END = 10;
+}
+
+message Content {
+    bytes entity = 1;
+}
+
+message Supply{
+    fixed64 id = 1;
+    fixed64 sender_id = 2;
+    fixed64 target_id = 3;// for message id (not for sender_id)
+    uint32 channel_type = 4; // channel type
+    string supply_name = 5;
+    google.protobuf.Timestamp ts = 6;
+    string arg_json = 7;
+    fixed64 mbus_id = 8;   // new mbus id for select demand.
+    Content cdata = 9; // content data
+}
+
+message Demand {
+    fixed64 id = 1;
+    fixed64 sender_id = 2;
+    fixed64 target_id = 3; // if set with message id (not for sender_id) (select for supply)
+    uint32 channel_type = 4; // channel type
+    string demand_name = 5;
+    google.protobuf.Timestamp ts = 6;
+    string arg_json = 7;
+    fixed64 mbus_id = 8;   // new mbus id for select supply...
+    Content cdata = 9; // content data 
+}
+
+
+
+message Target {
+    fixed64 id = 1;
+    fixed64 sender_id = 2;
+    fixed64 target_id = 3; // for target
+    uint32 channel_type = 4; // channel type
+    google.protobuf.Duration wait = 5;
+    fixed64 mbus_id = 6;    // if you need message bus, set Mbus with mbus_id = 1
+}
+
+message Channel {
+    fixed64 client_id = 1;
+    uint32 channel_type = 2; // channel type
+    string arg_json = 3;  // for Channel Argument
+}
+
+message Mbus {
+    fixed64 client_id = 1;
+    fixed64 mbus_id = 2;
+    string arg_json = 3; // for mbus description
+}
+
+message MbusMsg {
+    fixed64 msg_id = 1;    // if 0 for close message
+    fixed64 sender_id = 2;
+    fixed64 target_id = 3; // for target // if 0 for broadcast in mbus
+    fixed64 mbus_id = 4;
+    uint32 msg_type = 5;  // for message type
+    string msg_info = 6;   // for abstract information
+    string arg_json = 7;
+}
