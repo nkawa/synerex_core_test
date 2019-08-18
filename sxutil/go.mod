@@ -18,7 +18,7 @@ require (
 	golang.org/x/tools v0.0.0-20190107030206-d345f29b0d7b // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20181221175505-bd9b4fb69e2f // indirect
-	google.golang.org/grpc v1.17.0
+	google.golang.org/grpc v1.23.0
 	honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a // indirect
 )
 

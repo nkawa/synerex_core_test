@@ -1,1 +1,2 @@
-Hello 
+Synerex Core Test repository
+
